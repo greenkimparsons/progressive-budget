@@ -72,8 +72,15 @@ self.addEventListener("fetch", function(event) {
   // if the request is not for the API, serve static assets using "offline-first" approach.
   // see https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook#cache-falling-back-to-network
   event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
+    fetch(event.request).catch(function() {
+      return caches.match(event.request).then(function(response) {
+        if (response) {
+          return response;
+        } else if (event.request.headers.get("accept").includes("text/html")) {
+          // return the cached home page for all requests for html pages
+          return caches.match("/");
+        }
+      });
     })
   );
 });
